@@ -1,5 +1,46 @@
+from functions.get_file_content import get_file_content
 
+
+# Test 1
+directory = "calculator"
+file = "main.py"
+print(f"Result for directory: {directory}, file: {file}:")
+result = get_file_content(directory, file)
+print(result)
+
+# Test 2
+directory = "calculator"
+file = "pkg/calculator.py"
+print(f"Result for directory: {directory}, file: {file}:")
+result = get_file_content(directory, file)
+print(result)
+
+# Test 3
+directory = "calculator"
+file = "/bin/cat"
+print(f"Result for directory: {directory}, file: {file}:")
+result = get_file_content(directory, file)
+print(result)
+
+# Test 4
+directory = "calculator"
+file = "pkg/does_not_exist.py"
+print(f"Result for directory: {directory}, file: {file}:")
+result = get_file_content(directory, file)
+print(result)
+
+
+#
+"""
+# Test lorem.txt
+print("Results for lorem.txt")
+result = get_file_content("./calculator/", "lorem.txt")
+print(result)
+"""
+#
+"""
 from functions.get_files_info import get_files_info
+
 
 # Test 1: Current directory
 print("Result for current directory:")
@@ -20,3 +61,4 @@ print("    " + result)  # Add indentation for error messages
 print("Result for '../' directory:")
 result = get_files_info("calculator", "../")
 print("    " + result)  # Add indentation for error messages
+"""

@@ -1,12 +1,12 @@
 import os
 
+
 def get_files_info(working_directory, directory="."):
     result = ""
     if directory == ".":
         result += ("Result for current directory:\n")
     else:
         result += (f"Result for '{directory}' directory:\n")
-
 
     working_directory = os.path.abspath(working_directory)
     current_directory = os.path.abspath(os.path.join(working_directory, directory))

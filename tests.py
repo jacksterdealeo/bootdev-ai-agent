@@ -1,3 +1,35 @@
+from functions.write_file import write_file
+
+
+# Test 1
+directory = "calculator"
+file = "lorem.txt"
+content = "wait, this isn't lorem ipsum"
+print(f"Result for Directory: {directory}\nFile: {file}\nContent: {content}")
+result = write_file(directory, file, content)
+print(result)
+print()
+
+# Test 2
+directory = "calculator"
+file = "pkg/morelorem.txt"
+content = "lorem ipsum dolor sit amet"
+print(f"Result for Directory: {directory}\nFile: {file}\nContent: {content}")
+result = write_file(directory, file, content)
+print(result)
+print()
+
+# Test 3
+directory = "calculator"
+file = "/tmp/temp.txt"
+content = "this should not be allowed"
+print(f"Result for Directory: {directory}\nFile: {file}\nContent: {content}")
+result = write_file(directory, file, content)
+print(result)
+print()
+
+#
+"""
 from functions.get_file_content import get_file_content
 
 
@@ -28,6 +60,7 @@ file = "pkg/does_not_exist.py"
 print(f"Result for directory: {directory}, file: {file}:")
 result = get_file_content(directory, file)
 print(result)
+"""
 
 
 #

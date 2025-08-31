@@ -20,6 +20,6 @@ def get_file_content(working_directory, file_path):
             if len(file_content_string) == MAX_CHARS:
                 file_content_string += f'[...File "{file_path}" truncated at {MAX_CHARS} characters]'
             return file_content_string
-    except OSError as e:
+    except Exception as e:
         return f'Error: {e}'
     pass

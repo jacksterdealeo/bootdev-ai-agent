@@ -1,6 +1,22 @@
-from functions.write_file import write_file
+from functions.run_python import run_python_file
+
+# Test 1
+# (should print the calculator's usage instructions)
+print(run_python_file("calculator", "main.py"))
+
+# (should run the calculator... which gives a kinda nasty rendered result)
+print(run_python_file("calculator", "main.py", ["3 + 5"]))
+
+print(run_python_file("calculator", "tests.py"))
+
+# (this should return an error)
+print(run_python_file("calculator", "../main.py"))
+
+# (this should return an error)
+print(run_python_file("calculator", "nonexistent.py"))
 
 
+'''
 # Test 1
 directory = "calculator"
 file = "lorem.txt"
@@ -27,71 +43,4 @@ print(f"Result for Directory: {directory}\nFile: {file}\nContent: {content}")
 result = write_file(directory, file, content)
 print(result)
 print()
-
-#
-"""
-from functions.get_file_content import get_file_content
-
-
-# Test 1
-directory = "calculator"
-file = "main.py"
-print(f"Result for directory: {directory}, file: {file}:")
-result = get_file_content(directory, file)
-print(result)
-
-# Test 2
-directory = "calculator"
-file = "pkg/calculator.py"
-print(f"Result for directory: {directory}, file: {file}:")
-result = get_file_content(directory, file)
-print(result)
-
-# Test 3
-directory = "calculator"
-file = "/bin/cat"
-print(f"Result for directory: {directory}, file: {file}:")
-result = get_file_content(directory, file)
-print(result)
-
-# Test 4
-directory = "calculator"
-file = "pkg/does_not_exist.py"
-print(f"Result for directory: {directory}, file: {file}:")
-result = get_file_content(directory, file)
-print(result)
-"""
-
-
-#
-"""
-# Test lorem.txt
-print("Results for lorem.txt")
-result = get_file_content("./calculator/", "lorem.txt")
-print(result)
-"""
-#
-"""
-from functions.get_files_info import get_files_info
-
-
-# Test 1: Current directory
-print("Result for current directory:")
-result = get_files_info("calculator", ".")
-print(result)
-
-# Test 2: pkg directory
-print("Result for 'pkg' directory:")
-result = get_files_info("calculator", "pkg")
-print(result)
-
-# Test 3: Outside working directory (/bin)
-print("Result for '/bin' directory:")
-result = get_files_info("calculator", "/bin")
-print("    " + result)  # Add indentation for error messages
-
-# Test 4: Outside working directory (../)
-print("Result for '../' directory:")
-result = get_files_info("calculator", "../")
-print("    " + result)  # Add indentation for error messages
-"""
+'''

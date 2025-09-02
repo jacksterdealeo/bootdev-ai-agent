@@ -14,7 +14,6 @@ from functions.run_python import schema_run_python_file
 from functions.write_file import write_file
 from functions.write_file import schema_write_file
 
-
 available_functions = types.Tool(
     function_declarations=[
         schema_get_file_content,
@@ -23,6 +22,9 @@ available_functions = types.Tool(
         schema_write_file,
     ]
 )
+
+
+working_directory = os.path.abspath("./calculator")
 
 system_prompt = """
 You are a helpful AI coding agent.
@@ -68,16 +70,99 @@ response = client.models.generate_content(
     ),
 )
 
+
+def call_function(function_call_part, verbose=False):
+    function_name = function_call_part.name
+    function_args = function_call_part.args
+    function_args['working_directory'] = working_directory
+    if 'args' not in function_args:
+        function_args['args'] = []
+
+    invalid_function_name_error = types.Content(
+        role="tool",
+        parts=[
+            types.Part.from_function_response(
+                name=function_name,
+                response={"error": f"Unknown function: {function_name}"},
+            )
+        ],
+    )
+
+    invalid_function_args_error = types.Content(
+        role="tool",
+        parts=[
+            types.Part.from_function_response(
+                name=function_name,
+                response={"error": f"Invalid function arguments: {function_args}"},
+            )
+        ],
+    )
+
+    if verbose:
+        print(f"Calling function: {function_name}({function_args})")
+    else:
+        print(f" - Calling function: {function_name}")
+
+    result = 'Empty Result'
+    try:
+        match function_name:
+            case 'get_file_content':
+                result = get_file_content(
+                    working_directory,
+                    function_args['file_path']
+                )
+            case 'get_files_info':
+                result = get_files_info(
+                    working_directory,
+                    directory=function_args['directory']
+                )
+            case 'run_python_file':
+                result = run_python_file(
+                        working_directory,
+                        file_path=function_args['file_path'],
+                        args=function_args['args'],
+                )
+            case 'write_file':
+                result = write_file(
+                    working_directory,
+                    file_path=function_args['file_path'],
+                    content=function_args['content'],
+                )
+            case _:
+                return invalid_function_name_error
+
+    except TypeError:
+        return invalid_function_args_error
+
+    return types.Content(
+        role="tool",
+        parts=[
+            types.Part.from_function_response(
+                name=function_name,
+                response={"result": result},
+            )
+        ],
+    )
+
+
 if response.function_calls is not None:
     for function_call in (response.function_calls):
         print(f"Calling function: {function_call.name}({function_call.args})")
-        working_directory = os.path.abspath(".")
+        result = call_function(function_call)
+        if result.parts[0].function_response.response is not None:
+            if verbose_flag:
+                print(f"-> {result.parts[0].function_response.response}")
+        else:
+            raise Exception("No function response.")
+
+        '''
         match function_call.name:
             case 'get_files_info':
                 directory = function_call.args['directory']
                 if directory is None:
                     directory = "."
                 print(get_files_info(working_directory, directory))
+        '''
 else:
     if verbose_flag:
         print(f"User prompt: {response.text}")

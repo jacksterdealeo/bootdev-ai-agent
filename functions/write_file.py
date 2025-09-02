@@ -29,7 +29,7 @@ def write_file(working_directory, file_path, content):
             return f'Error: {e}'
 
     try:
-        with open(file_path, "x") as f:
+        with open(current_file, "x") as f:
             f.write(content)
     except Exception as e:
         return f'Error: {e}'

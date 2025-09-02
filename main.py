@@ -61,14 +61,16 @@ messages = [
 
 client = genai.Client(api_key=api_key)
 
-response = client.models.generate_content(
-    model=model_name,
-    contents=messages,
-    config=types.GenerateContentConfig(
-        tools=[available_functions],
-        system_instruction=system_prompt
-    ),
-)
+
+def get_generated_content():
+    return client.models.generate_content(
+        model=model_name,
+        contents=messages,
+        config=types.GenerateContentConfig(
+            tools=[available_functions],
+            system_instruction=system_prompt
+        ),
+    )
 
 
 def call_function(function_call_part, verbose=False):
@@ -77,7 +79,6 @@ def call_function(function_call_part, verbose=False):
     function_args['working_directory'] = working_directory
     if 'args' not in function_args:
         function_args['args'] = []
-
     invalid_function_name_error = types.Content(
         role="tool",
         parts=[
@@ -87,7 +88,6 @@ def call_function(function_call_part, verbose=False):
             )
         ],
     )
-
     invalid_function_args_error = types.Content(
         role="tool",
         parts=[
@@ -98,11 +98,6 @@ def call_function(function_call_part, verbose=False):
         ],
     )
 
-    if verbose:
-        print(f"Calling function: {function_name}({function_args})")
-    else:
-        print(f" - Calling function: {function_name}")
-
     result = 'Empty Result'
     try:
         match function_name:
@@ -112,6 +107,8 @@ def call_function(function_call_part, verbose=False):
                     function_args['file_path']
                 )
             case 'get_files_info':
+                if 'directory' not in function_args:
+                    function_args['directory'] = '.'
                 result = get_files_info(
                     working_directory,
                     directory=function_args['directory']
@@ -130,10 +127,8 @@ def call_function(function_call_part, verbose=False):
                 )
             case _:
                 return invalid_function_name_error
-
     except TypeError:
         return invalid_function_args_error
-
     return types.Content(
         role="tool",
         parts=[
@@ -145,29 +140,63 @@ def call_function(function_call_part, verbose=False):
     )
 
 
-if response.function_calls is not None:
-    for function_call in (response.function_calls):
-        print(f"Calling function: {function_call.name}({function_call.args})")
-        result = call_function(function_call)
-        if result.parts[0].function_response.response is not None:
-            if verbose_flag:
-                print(f"-> {result.parts[0].function_response.response}")
-        else:
-            raise Exception("No function response.")
-
-        '''
-        match function_call.name:
-            case 'get_files_info':
-                directory = function_call.args['directory']
-                if directory is None:
-                    directory = "."
-                print(get_files_info(working_directory, directory))
-        '''
-else:
+def dispatcher():
+    for cand in response.candidates:
+        for part in cand.content.parts:
+            if part.function_call:
+                fn = part.function_call
+                print(f'- Calling function: {fn.name}')
+                # append tool result as a user message
+                result = call_function(fn)
+                messages.append(types.Content(role="user", parts=result.parts))
     if verbose_flag:
-        print(f"User prompt: {response.text}")
+        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
+    '''
+    function_calls = response.function_calls
+    if function_calls is not None:
+        for call in (function_calls):
+            print(f"Calling function: {call.name}({call.args})")
+            result = call_function(call)
+            if result.parts[0].function_response.response is not None:
+                function_response = result.parts[0].function_response.response
+                messages.append(types.Content(role="user", parts=result.parts))
+                if verbose_flag:
+                    print(f"-> {function_response}")
+            else:
+                err = 'No function response.'
+                # messages.append(types.Content(role="user", parts=[types.Part(text=err)]))
+                raise Exception(err)
     else:
-        print(response.text)
-if verbose_flag:
-    print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-    print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+        if verbose_flag:
+            print(f"User prompt: {response.text}")
+        else:
+            print(response.text)
+    '''
+
+
+for i in range(20):
+    response = get_generated_content()
+
+    # append the model’s message(s)
+    for cand in response.candidates:
+        messages.append(types.Content(role="model", parts=cand.content.parts))
+
+    # dispatch any function calls found in parts
+    made_call = False
+    for cand in response.candidates:
+        for part in cand.content.parts:
+            if getattr(part, "function_call", None):
+                fn = part.function_call
+                print(f"- Calling function: {fn.name}")
+                result = call_function(fn)  # pass the full call (name + args)
+                messages.append(types.Content(role="user", parts=result.parts))
+                made_call = True
+
+    # if no calls, check for text and finish
+    if not made_call:
+        has_text = any(getattr(p, "text", None) for c in response.candidates for p in c.content.parts)
+        if has_text:
+            print(f"Final response:\n{response.text}")
+            break
